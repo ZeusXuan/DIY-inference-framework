@@ -8,13 +8,11 @@ Tensor<float>::Tensor(uint32_t channels, uint32_t rows, uint32_t cols) {
   data_ = arma::fcube(rows, cols, channels);
 }
 
-// 拷贝构造
 Tensor<float>::Tensor(const Tensor &tensor) {
   this->data_ = tensor.data_;
   this->raw_shapes_ = tensor.raw_shapes_;
 }
 
-// 重载=
 Tensor<float> &Tensor<float>::operator=(const Tensor &tensor) {
   if (this != &tensor) {
     this->data_ = tensor.data_;
@@ -40,12 +38,10 @@ uint32_t Tensor<float>::channels() const {
 
 uint32_t Tensor<float>::size() const {
   CHECK(!this->data_.empty());
-  // cube中有多少个float
   return this->data_.size();
 }
 
 void Tensor<float>::set_data(const arma::fcube &data) {
-  // 输出错误信息
   CHECK(data.n_rows == this->data_.n_rows) << data.n_rows << " != " << this->data_.n_rows;
   CHECK(data.n_cols == this->data_.n_cols) << data.n_cols << " != " << this->data_.n_cols;
   CHECK(data.n_slices == this->data_.n_slices) << data.n_slices << " != " << this->data_.n_slices;
@@ -85,7 +81,6 @@ const arma::fmat &Tensor<float>::at(uint32_t channel) const {
 }
 
 float Tensor<float>::at(uint32_t channel, uint32_t row, uint32_t col) const {
-  // 必须满足row < this->rows()
   CHECK_LT(row, this->rows());
   CHECK_LT(col, this->cols());
   CHECK_LT(channel, this->channels());
@@ -102,24 +97,12 @@ float &Tensor<float>::at(uint32_t channel, uint32_t row, uint32_t col) {
 void Tensor<float>::Padding(const std::vector<uint32_t> &pads, float padding_value) {
   CHECK(!this->data_.empty());
   CHECK_EQ(pads.size(), 4);
-  // 4个方向的padding
   uint32_t pad_rows1 = pads.at(0);  // up
   uint32_t pad_rows2 = pads.at(1);  // bottom
   uint32_t pad_cols1 = pads.at(2);  // left
   uint32_t pad_cols2 = pads.at(3);  // right
 
-  //TODO:实现padding功能
-  arma::fcube A(pad_rows1, this->cols(), this->channels(), arma::fill::value(padding_value));
-  this->data_.insert_rows(0, A);
-  arma::fcube B(pad_rows2, this->cols(), this->channels(), arma::fill::value(padding_value));  
-  this->data_.insert_rows(this->rows(), B);
-  arma::fcube C(this->rows(), pad_cols1, this->channels(), arma::fill::value(padding_value));
-  this->data_.insert_cols(0, C);
-  arma::fcube D(this->rows(), pad_cols2, this->channels(), arma::fill::value(padding_value));
-  this->data_.insert_cols(this->cols(), D);  
-  this->raw_shapes_ = this->shapes();
-
-  /*另一种实现方法：
+  //TODO:完成padding功能
   arma::fcube new_data(this->data_.n_rows + pad_rows1 + pad_rows2,
                        this->data_.n_cols + pad_cols1 + pad_cols2,
                        this->data_.n_slices);
@@ -129,7 +112,6 @@ void Tensor<float>::Padding(const std::vector<uint32_t> &pads, float padding_val
                    new_data.n_cols - pad_cols2 - 1, new_data.n_slices - 1) =
       this->data_;
   this->data_ = std::move(new_data);
-  */
 }
 
 void Tensor<float>::Fill(float value) {
@@ -146,16 +128,14 @@ void Tensor<float>::Fill(const std::vector<float> &values) {
   const uint32_t cols = this->cols();
   const uint32_t planes = rows * cols;
   const uint32_t channels = this->data_.n_slices;
-
-  //TODO:使用数组values来填充Tensor
-  for (uint32_t i = 0; i < channels; i++){
-    for(uint32_t j = 0; j < rows; j++){
-      for(uint32_t h = 0; h < cols; h++){
-        this->at(i, j, h) = values[i*planes + j*cols + h];
-      }
-    }
+  //TODO:完成Fill功能
+  for (uint32_t i = 0; i < channels; ++i) {
+      auto& channel_data = this->data_.slice(i);
+      const arma::fmat& channel_data_t =
+          arma::fmat(values.data() + i * planes, this->cols(), this->rows());
+      channel_data = channel_data_t.t();
   }
-
+  
 }
 
 void Tensor<float>::Show() {
