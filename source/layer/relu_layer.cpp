@@ -9,7 +9,6 @@ ReluLayer::ReluLayer(const std::shared_ptr<Operator> &op) : Layer("Relu") {
   ReluOperator *relu_op = dynamic_cast<ReluOperator *>(op.get());
 
   CHECK(relu_op != nullptr) << "Relu operator is empty";
-
   this->op_ = std::make_unique<ReluOperator>(relu_op->get_thresh());
 }
 
@@ -19,14 +18,13 @@ void ReluLayer::Forwards(const std::vector<std::shared_ptr<Tensor<float>>> &inpu
   CHECK(this->op_->op_type_ == OpType::kOperatorRelu);
   CHECK(!inputs.empty());
 
-  const uint32_t batch_size = inputs.size();
+  const uint32_t batch_size = inputs.size(); //一批x，放在vec当中，理解为batchsize数量的tensor，需要进行relu操作
   for (int i = 0; i < batch_size; ++i) {
 
     CHECK(!inputs.at(i)->empty());
-    const std::shared_ptr<Tensor<float>> &input_data = inputs.at(i);
+    const std::shared_ptr<Tensor<float>> &input_data = inputs.at(i); //取出批次当中的一个张量
     std::shared_ptr<Tensor<float>> output_data = input_data->Clone();
 
-    // begin: transform
     output_data->data().transform([&](float value) {
       float thresh = op_->get_thresh();
       //x >= thresh
@@ -37,13 +35,13 @@ void ReluLayer::Forwards(const std::vector<std::shared_ptr<Tensor<float>>> &inpu
         return 0.f;
       }
     });
-    // end: transform
 
     outputs.push_back(output_data);
   }
 }
 
 std::shared_ptr<Layer> ReluLayer::CreateInstance(const std::shared_ptr<Operator> &op) {
+  CHECK(op->op_type_ == OpType::kOperatorRelu);
   std::shared_ptr<Layer> relu_layer = std::make_shared<ReluLayer>(op);
   return relu_layer;
 }

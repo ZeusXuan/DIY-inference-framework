@@ -107,17 +107,28 @@ void Tensor<float>::Padding(const std::vector<uint32_t> &pads, float padding_val
   uint32_t pad_cols1 = pads.at(2);  // left
   uint32_t pad_cols2 = pads.at(3);  // right
 
-  //TODO:完成padding功能
-  arma::fcube new_data(this->data_.n_rows + pad_rows1 + pad_rows2,
-                       this->data_.n_cols + pad_cols1 + pad_cols2,
-                       this->data_.n_slices);
-  new_data.fill(padding_value);
+  arma::fcube padded_cube;
+  uint32_t channels = this->channels();
+  CHECK_GT(channels, 0);
 
-  new_data.subcube(pad_rows1, pad_cols1, 0, new_data.n_rows - pad_rows2 - 1,
-                   new_data.n_cols - pad_cols2 - 1, new_data.n_slices - 1) =
-      this->data_;
-  this->data_ = std::move(new_data);
+  for (uint32_t i = 0; i < channels; ++i) {
+    const arma::fmat &sub_mat = this->data_.slice(i);
+    CHECK(!sub_mat.empty());
 
+    arma::fmat padded_mat(sub_mat.n_rows + pad_rows1 + pad_rows2,
+                          sub_mat.n_cols + pad_cols1 + pad_cols2);
+
+    padded_mat.fill((float) padding_value);
+    padded_mat.submat(pad_rows1, pad_cols1, pad_rows1 + sub_mat.n_rows - 1,
+                      pad_cols1 + sub_mat.n_cols - 1) = sub_mat;
+
+    if (padded_cube.empty()) {
+      padded_cube = arma::fcube(padded_mat.n_rows, padded_mat.n_cols, channels);
+    }
+    padded_cube.slice(i) = padded_mat;
+  }
+  CHECK(!padded_cube.empty());
+  this->data_ = padded_cube;
 }
 
 void Tensor<float>::Fill(float value) {
@@ -133,7 +144,8 @@ void Tensor<float>::Fill(const std::vector<float> &values) {
   const uint32_t cols = this->cols();
   const uint32_t planes = rows * cols;
   const uint32_t channels = this->data_.n_slices;
-  //TODO:完成Fill功能
+  
+//TODO:完成Fill功能
   for (uint32_t i = 0; i < channels; ++i) {
       auto& channel_data = this->data_.slice(i);
       const arma::fmat& channel_data_t =

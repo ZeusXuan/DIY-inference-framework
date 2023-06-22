@@ -30,7 +30,7 @@ void SigmoidLayer::Forwards(const std::vector<std::shared_ptr<Tensor<float>>> &i
       return 1 / (1 + std::exp(-value));
     });
     // end: transform
-
+    
     outputs.push_back(output_data);
   }
 }
@@ -43,5 +43,4 @@ std::shared_ptr<Layer> SigmoidLayer::CreateInstance(const std::shared_ptr<Operat
 }
 
 LayerRegistererWrapper kSigmoidLayer(OpType::kOperatorSigmoid, SigmoidLayer::CreateInstance);
-
 }
