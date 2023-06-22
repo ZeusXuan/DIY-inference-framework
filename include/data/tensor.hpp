@@ -42,6 +42,8 @@ class Tensor<float> {
 
   float index(uint32_t offset) const;
 
+  float &index(uint32_t offset);
+
   std::vector<uint32_t> shapes() const;
 
   arma::fcube &data();
@@ -70,9 +72,10 @@ class Tensor<float> {
 
   void Flatten();
 
+  std::shared_ptr<Tensor<float>> Clone();
  private:
   std::vector<uint32_t> raw_shapes_;
   arma::fcube data_;
 };
 }
-#endif 
+#endif //KUIPER_COURSE_INCLUDE_TENSOR_HPP_

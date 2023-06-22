@@ -13,7 +13,6 @@ std::shared_ptr<Tensor<float >> CSVDataLoader::LoadDataWithHeader(const std::str
   std::stringstream line_stream;
 
   const auto &[rows, cols] = CSVDataLoader::GetMatrixSize(in, split_char);
-  // 因为带header所以row必须大于1
   CHECK(rows >= 1);
   std::shared_ptr<Tensor<float>> input_tensor = std::make_shared<Tensor<float>>(1, rows - 1, cols);
   arma::fmat &data = input_tensor->at(0);
@@ -57,23 +56,20 @@ std::shared_ptr<Tensor<float >> CSVDataLoader::LoadDataWithHeader(const std::str
   return input_tensor;
 }
 
-// split_char为分割符
 std::shared_ptr<Tensor<float >> CSVDataLoader::LoadData(const std::string &file_path, char split_char) {
   CHECK(!file_path.empty()) << "File path is empty!";
-  std::ifstream in(file_path);
+  std::ifstream in(file_path); // 打开文件 C++io知识
   CHECK(in.is_open() && in.good()) << "File open failed! " << file_path;
 
   std::string line_str;
   std::stringstream line_stream;
 
-  // 获取行数和列数
   const auto &[rows, cols] = CSVDataLoader::GetMatrixSize(in, split_char);
-  // 初始化指向输出的共享指针
+  // 知道了多大的csv文件，才能去准备tensor
   std::shared_ptr<Tensor<float>> input_tensor = std::make_shared<Tensor<float>>(1, rows, cols);
   arma::fmat &data = input_tensor->at(0);
 
   size_t row = 0;
-  // 外循环
   while (in.good()) {
     std::getline(in, line_str);
     if (line_str.empty()) {
@@ -85,11 +81,9 @@ std::shared_ptr<Tensor<float >> CSVDataLoader::LoadData(const std::string &file_
     line_stream.str(line_str);
 
     size_t col = 0;
-    // 内循环
     while (line_stream.good()) {
       std::getline(line_stream, token, split_char);
       try {
-        // 字符串转化为浮点数
         data.at(row, col) = std::stof(token);
       }
       catch (std::exception &e) {
@@ -111,16 +105,15 @@ std::pair<size_t, size_t> CSVDataLoader::GetMatrixSize(std::ifstream &file, char
   file.clear();
   size_t fn_rows = 0;
   size_t fn_cols = 0;
-  const std::ifstream::pos_type start_pos = file.tellg();// 记录文件当前位置
+  const std::ifstream::pos_type start_pos = file.tellg();
 
   std::string token;
   std::string line_str;
   std::stringstream line_stream;
 
-// 一行一行的读入line_str
   while (file.good() && load_ok) {
     std::getline(file, line_str);
-    if (line_str.empty()) {// 判断行是否为空
+    if (line_str.empty()) {
       break;
     }
 
@@ -131,16 +124,16 @@ std::pair<size_t, size_t> CSVDataLoader::GetMatrixSize(std::ifstream &file, char
     std::string row_token;
     while (line_stream.good()) {
       std::getline(line_stream, row_token, split_char);
-      ++line_cols; //当前列数加一
+      ++line_cols;
     }
     if (line_cols > fn_cols) {
       fn_cols = line_cols;
     }
 
-    ++fn_rows; //当前行数加一
+    ++fn_rows;
   }
   file.clear();
   file.seekg(start_pos);
-  return {fn_rows, fn_cols}; //返回行数和列数
+  return {fn_rows, fn_cols};
 }
 }

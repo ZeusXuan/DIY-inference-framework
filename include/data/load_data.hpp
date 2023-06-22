@@ -15,4 +15,4 @@ class CSVDataLoader {
   static std::pair<size_t, size_t> GetMatrixSize(std::ifstream &file, char split_char);
 };
 }
-#endif
+#endif //KUIPER_COURSE_INCLUDE_DATA_LOAD_DATA_HPP_

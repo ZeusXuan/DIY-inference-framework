@@ -57,6 +57,11 @@ float Tensor<float>::index(uint32_t offset) const {
   return this->data_.at(offset);
 }
 
+float &Tensor<float>::index(uint32_t offset) {
+  CHECK(offset < this->data_.size());
+  return this->data_.at(offset);
+}
+
 std::vector<uint32_t> Tensor<float>::shapes() const {
   CHECK(!this->data_.empty());
   return {this->channels(), this->rows(), this->cols()};
@@ -112,6 +117,7 @@ void Tensor<float>::Padding(const std::vector<uint32_t> &pads, float padding_val
                    new_data.n_cols - pad_cols2 - 1, new_data.n_slices - 1) =
       this->data_;
   this->data_ = std::move(new_data);
+
 }
 
 void Tensor<float>::Fill(float value) {
@@ -123,7 +129,6 @@ void Tensor<float>::Fill(const std::vector<float> &values) {
   CHECK(!this->data_.empty());
   const uint32_t total_elems = this->data_.size();
   CHECK_EQ(values.size(), total_elems);
-
   const uint32_t rows = this->rows();
   const uint32_t cols = this->cols();
   const uint32_t planes = rows * cols;
@@ -135,7 +140,6 @@ void Tensor<float>::Fill(const std::vector<float> &values) {
           arma::fmat(values.data() + i * planes, this->cols(), this->rows());
       channel_data = channel_data_t.t();
   }
-  
 }
 
 void Tensor<float>::Show() {
@@ -178,5 +182,9 @@ void Tensor<float>::Rand() {
 void Tensor<float>::Ones() {
   CHECK(!this->data_.empty());
   this->data_.fill(1.);
+}
+
+std::shared_ptr<Tensor<float>> Tensor<float>::Clone() {
+  return std::make_shared<Tensor>(*this);
 }
 }
